@@ -1,0 +1,18 @@
+# Código Go generado automáticamente por sqlc
+/db/sqlc/
+
+# Módulo e instalación de Go (se inicializa con go mod init)
+go.mod
+go.sum
+
+# Binarios y ejecutables compilados de Go
+*.exe
+*.exe;
+*.dll
+*.so
+*.dylib
+main
+
+# Variables de entorno o archivos temporales
+.env
+*.tmp
