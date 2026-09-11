@@ -47,7 +47,11 @@ El modelo de organización de Mate Máticos se puede ver en 2 tablas:
 * **Go** (v1.20 o superior)
 * **Docker** y **Docker Compose**
 * **sqlc**
-
+* **Make**
+* **Agregar el usuario al grupo docker para evitar problemas de permisos**
+```bash
+sudo usermod -aG docker $USER
+```
 ---
 
 ## Pasos para ejecutar el proyecto
