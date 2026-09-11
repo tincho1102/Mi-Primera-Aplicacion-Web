@@ -11,5 +11,4 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      # Carga los archivos .sql de esta carpeta al inicializar la BD
       - ./db/schema:/docker-entrypoint-initdb.d

@@ -1,17 +1,16 @@
 package main
 
 import (
-  "context"
-	"database/sql"
 	"fmt"
-	"log"
-  _ "github.com/jackc/pgx/v5/stdlib"
-  sqlc "MateMaticos.com/servidor-go-tp1/db/sqlc" // generado por sqlc
 )
 
 func main(){
+
+	fmt.Println("Servidor Go - TP Persistencia")
+	fmt.Println("Para ejecutar las pruebas del CRUD y el pipeline automatizado, utiliza: make test")
       //connStr := "user=cliente password=progwebunicen dbname=mate_db"
       //no funcionaba y lo consulté con gemini
+	  /*
 	  connStr := "postgres://cliente:progwebunicen@127.0.0.1:5432/mate_db?sslmode=disable"
       db, err := sql.Open("pgx", connStr)
       if err != nil {
@@ -80,5 +79,5 @@ func main(){
 		log.Fatalf("failed to get categoria after deletion: %v", err)
 	}
 
-
+	*/
 }

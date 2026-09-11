@@ -52,38 +52,21 @@ El modelo de organización de Mate Máticos se puede ver en 2 tablas:
 
 ## Pasos para ejecutar el proyecto
 
-Instrucciones en la terminal desde la raíz del proyecto:
+Instrucciones en la terminal desde la raíz del proyecto.
 
-### 1. Inicializar el módulo de Go (si no está creado)
+En el archivo Makefile se hicieron los comandos que se van a utilizar para agilizar la instalación y ejecucion de tests
+
+### 1. Instalacion de módulo, dependencias, sqlc y Docker
 ```bash
-go mod init [MateMaticos.com/servidor-go-tp1](https://MateMaticos.com/servidor-go-tp1)
-go get [github.com/jackc/pgx/v5](https://github.com/jackc/pgx/v5)
-go mod tidy
+    make prepare
 ```
 ---
-### 2. Instalar sqlc (opcional, si no se encuentra instalado)
+### 2. Ejecución de pruebas.
 ```bash
-go install [github.com/sqlc-dev/sqlc/cmd/sqlc@latest](https://github.com/sqlc-dev/sqlc/cmd/sqlc@latest)
+    make run-tests
 ```
----
-### 3. Generar el código Go con sqlc
+
+### 3. Limpieza de contenedores y volúmenes, borra lo que tiene las tablas.
 ```bash
-sqlc generate
+    make clean
 ```
----
-### 4. Levantar la base de datos en Docker
-```bash
-docker compose up -d
-```
----
-### 5. Ejecutar la aplicación
-```bash
-go run main.go
-```
----
-### OPCIONAL-> Limpiar el entorno
-Para detener el contenedor y limpiar los volúmenes de la base de datos:
-```bash
-docker compose down -v
-```
----
