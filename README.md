@@ -8,15 +8,15 @@ Este proyecto implementa la capa de persistencia utilizando Go, sqlc y PostgreSQ
 
 En la carpeta db se encuantra el archivo.sql que contiene las tablas y en users.sql contiene las consultas SQL.
 
-En el main.go se encuentran las pruebas CRUD con las operaciones a realizar sobre las tablas.
+En el main_test.go se encuentran las pruebas CRUD con las operaciones a realizar sobre las tablas.
 
-
+---
 
 ## Dominio
 
 Cada producto tendrá asociado un identificador, su nombre, descripción, categoría (mates, termos y accesorios), precio y stock.
 
-Ademas hay una tabla con categorias, hecha para que los productos pueden tener subcategorias.
+Ademas hay una tabla con categorias, hecha para que los productos puedan tener subcategorias.
 
 ---
 
@@ -65,7 +65,7 @@ En el archivo Makefile se hicieron los comandos que se van a utilizar para agili
 ```bash
     make run-tests
 ```
-
+---
 ### 3. Limpieza de contenedores y volúmenes, borra lo que tiene las tablas.
 ```bash
     make clean
