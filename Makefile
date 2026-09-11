@@ -9,7 +9,7 @@ MODULE_NAME = matematicos.com/servidor-go-tp1
 prepare:
 	go mod init $(MODULE_NAME) || true
 	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
-	sqlc generate
+	go run github.com/sqlc-dev/sqlc/cmd/sqlc@latest generate
 	go get github.com/jackc/pgx/v5
 	go mod tidy
 	docker compose up -d
