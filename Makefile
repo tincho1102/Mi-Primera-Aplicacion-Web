@@ -16,7 +16,9 @@ prepare:
 
 # 2. Ejecución de pruebas, ejecuta el test
 run-tests:
-	go test -v ./...
+	@echo "Esperando a que la base de datos esté lista..."
+	@sleep 5
+	go test ./... -v
 
 # 3. Limpieza de contenedores y volúmenes, borra lo que tiene las tablas
 clean:
