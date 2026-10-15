@@ -22,9 +22,9 @@ type CreateCategoriaParams struct {
 	IDPadre        sql.NullInt32 `json:"id_padre"`
 }
 
-func (q *Queries) CreateCategoria(ctx context.Context, arg CreateCategoriaParams) (Categorium, error) {
+func (q *Queries) CreateCategoria(ctx context.Context, arg CreateCategoriaParams) (Categoria, error) {
 	row := q.db.QueryRowContext(ctx, createCategoria, arg.NombreCat, arg.DescripcionCat, arg.IDPadre)
-	var i Categorium
+	var i Categoria
 	err := row.Scan(
 		&i.IDCat,
 		&i.NombreCat,
@@ -38,7 +38,7 @@ func (q *Queries) CreateCategoria(ctx context.Context, arg CreateCategoriaParams
 const createProducto = `-- name: CreateProducto :one
 INSERT INTO producto (nombre_prod, descripcion_prod, precio, stock, id_cat)
 VALUES ($1, $2, $3, $4, $5)
-RETURNING id_prod, nombre_prod, descripcion_prod, precio, stock, id_cat created_at
+RETURNING id_prod, nombre_prod, descripcion_prod, precio, stock, id_cat, created_at
 `
 
 type CreateProductoParams struct {
@@ -49,16 +49,7 @@ type CreateProductoParams struct {
 	IDCat           int32  `json:"id_cat"`
 }
 
-type CreateProductoRow struct {
-	IDProd          int32  `json:"id_prod"`
-	NombreProd      string `json:"nombre_prod"`
-	DescripcionProd string `json:"descripcion_prod"`
-	Precio          string `json:"precio"`
-	Stock           int32  `json:"stock"`
-	CreatedAt       int32  `json:"created_at"`
-}
-
-func (q *Queries) CreateProducto(ctx context.Context, arg CreateProductoParams) (CreateProductoRow, error) {
+func (q *Queries) CreateProducto(ctx context.Context, arg CreateProductoParams) (Producto, error) {
 	row := q.db.QueryRowContext(ctx, createProducto,
 		arg.NombreProd,
 		arg.DescripcionProd,
@@ -66,13 +57,14 @@ func (q *Queries) CreateProducto(ctx context.Context, arg CreateProductoParams) 
 		arg.Stock,
 		arg.IDCat,
 	)
-	var i CreateProductoRow
+	var i Producto
 	err := row.Scan(
 		&i.IDProd,
 		&i.NombreProd,
 		&i.DescripcionProd,
 		&i.Precio,
 		&i.Stock,
+		&i.IDCat,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -104,9 +96,9 @@ FROM categoria
 WHERE id_cat = $1
 `
 
-func (q *Queries) GetCategoria(ctx context.Context, idCat int32) (Categorium, error) {
+func (q *Queries) GetCategoria(ctx context.Context, idCat int32) (Categoria, error) {
 	row := q.db.QueryRowContext(ctx, getCategoria, idCat)
-	var i Categorium
+	var i Categoria
 	err := row.Scan(
 		&i.IDCat,
 		&i.NombreCat,
@@ -144,15 +136,15 @@ FROM categoria
 ORDER BY nombre_cat ASC
 `
 
-func (q *Queries) ListCategorias(ctx context.Context) ([]Categorium, error) {
+func (q *Queries) ListCategorias(ctx context.Context) ([]Categoria, error) {
 	rows, err := q.db.QueryContext(ctx, listCategorias)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Categorium
+	var items []Categoria
 	for rows.Next() {
-		var i Categorium
+		var i Categoria
 		if err := rows.Scan(
 			&i.IDCat,
 			&i.NombreCat,

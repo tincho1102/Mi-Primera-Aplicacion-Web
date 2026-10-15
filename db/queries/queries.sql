@@ -1,7 +1,7 @@
 -- name: CreateProducto :one
 INSERT INTO producto (nombre_prod, descripcion_prod, precio, stock, id_cat)
 VALUES ($1, $2, $3, $4, $5)
-RETURNING id_prod, nombre_prod, descripcion_prod, precio, stock, id_cat created_at;
+RETURNING *;
 
 -- name: CreateCategoria :one
 INSERT INTO categoria(nombre_cat, descripcion_cat, id_padre)
