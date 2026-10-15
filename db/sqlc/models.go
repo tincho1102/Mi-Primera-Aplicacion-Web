@@ -8,7 +8,7 @@ import (
 	"database/sql"
 )
 
-type Categorium struct {
+type Categoria struct {
 	IDCat          int32         `json:"id_cat"`
 	NombreCat      string        `json:"nombre_cat"`
 	DescripcionCat string        `json:"descripcion_cat"`
