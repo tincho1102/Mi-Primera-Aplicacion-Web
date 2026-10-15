@@ -1,0 +1,8 @@
+# Generados por el Makefile
+server
+server.pid
+server.log
+
+# Editores
+.vscode/
+.idea/

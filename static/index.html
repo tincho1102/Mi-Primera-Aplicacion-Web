@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mates, termos y accesorios | API REST</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="tabla">
+        <p class="estado">Servidor activo</p>
+        <h1>Mates, termos y accesorios</h1>
+        <p class="intro">API REST para gestionar el catálogo de la tienda: <strong>categorías</strong> y <strong>productos</strong>. El servidor está funcionando y listo para recibir peticiones.</p>
+
+        <div class="endpoints">
+            <section>
+                <h2>Categorías</h2>
+                <ul>
+                    <li><span class="metodo get">GET</span><a href="/categorias"><code>/categorias</code></a></li>
+                    <li><span class="metodo post">POST</span><code>/categorias</code></li>
+                    <li><span class="metodo get">GET</span><code>/categorias/{id}</code></li>
+                    <li><span class="metodo put">PUT</span><code>/categorias/{id}</code></li>
+                    <li><span class="metodo delete">DELETE</span><code>/categorias/{id}</code></li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Productos</h2>
+                <ul>
+                    <li><span class="metodo get">GET</span><a href="/productos"><code>/productos</code></a></li>
+                    <li><span class="metodo post">POST</span><code>/productos</code></li>
+                    <li><span class="metodo get">GET</span><code>/productos/{id}</code></li>
+                    <li><span class="metodo put">PUT</span><code>/productos/{id}</code></li>
+                    <li><span class="metodo delete">DELETE</span><code>/productos/{id}</code></li>
+                </ul>
+            </section>
+        </div>
+
+        <p class="nota">Con <code>{id}</code>, GET devuelve un registro, PUT lo actualiza y DELETE lo elimina.</p>
+        <p class="pie">Hecho con Go, PostgreSQL y sqlc.</p>
+    </main>
+</body>
+</html>

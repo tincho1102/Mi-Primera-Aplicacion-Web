@@ -1,0 +1,179 @@
+/* Paleta: nogal (fondo), madera clara (tabla), yerba, cobre, ámbar y ladrillo (métodos) */
+:root {
+    --nogal: #2a1b11;
+    --nogal-claro: #3b271a;
+    --tabla: #d8b88a;
+    --tabla-borde: #b58b55;
+    --tinta: #2a1b11;
+    --tinta-suave: #5c3f27;
+    --crema: #f4e9d6;
+    --ambar-claro: #e9c98f;
+    --yerba: #4f6b24;
+    --cobre: #8a4b1c;
+    --ambar: #7d5f0e;
+    --ladrillo: #8f2f22;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 2rem 1rem;
+    color: var(--tinta);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.6;
+    background-color: var(--nogal);
+    background-image:
+        repeating-linear-gradient(92deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 9px),
+        repeating-linear-gradient(88deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 17px);
+}
+
+/* La tabla de madera: elemento principal de la página */
+.tabla {
+    width: min(100%, 46rem);
+    padding: clamp(1.5rem, 4vw, 2.75rem);
+    background-color: var(--tabla);
+    background-image:
+        repeating-linear-gradient(90deg, rgba(92, 63, 39, 0.1) 0 1px, transparent 1px 7px),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0 3px, transparent 3px 23px);
+    border: 1px solid var(--tabla-borde);
+    border-radius: 0.5rem;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+.estado {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 1rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--yerba);
+}
+
+.estado::before {
+    content: "";
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: var(--yerba);
+    box-shadow: 0 0 0 3px rgba(79, 107, 36, 0.25);
+}
+
+/* Título con efecto grabado en la madera */
+h1 {
+    margin: 0 0 1rem;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(2rem, 6vw, 3.25rem);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    color: var(--tinta);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.intro {
+    max-width: 38rem;
+    margin: 0 0 2rem;
+    color: var(--tinta-suave);
+}
+
+.endpoints {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1rem;
+}
+
+.endpoints section {
+    padding: 1.1rem 1.25rem;
+    background: var(--nogal-claro);
+    color: var(--crema);
+    border-radius: 0.3rem;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+h2 {
+    margin: 0 0 0.5rem;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+li {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.45rem 0;
+    border-top: 1px solid rgba(244, 233, 214, 0.12);
+}
+
+.metodo {
+    flex: 0 0 4.4rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.2rem;
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--crema);
+}
+
+.get { background: var(--yerba); }
+.post { background: var(--cobre); }
+.put { background: var(--ambar); }
+.delete { background: var(--ladrillo); }
+
+code {
+    font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+    font-size: 0.88rem;
+    color: var(--ambar-claro);
+    overflow-wrap: anywhere;
+}
+
+a {
+    color: inherit;
+    text-decoration: underline dotted;
+    text-underline-offset: 0.2rem;
+}
+
+a:hover code {
+    color: var(--crema);
+}
+
+a:focus-visible {
+    outline: 2px solid var(--ambar-claro);
+    outline-offset: 3px;
+    border-radius: 0.15rem;
+}
+
+.nota {
+    margin: 1.25rem 0 0;
+    font-size: 0.9rem;
+    color: var(--tinta-suave);
+}
+
+.nota code {
+    color: var(--tinta);
+    font-weight: 600;
+}
+
+.pie {
+    margin: 1.5rem 0 0;
+    padding-top: 0.9rem;
+    border-top: 1px solid rgba(92, 63, 39, 0.35);
+    font-size: 0.85rem;
+    color: var(--tinta-suave);
+}
