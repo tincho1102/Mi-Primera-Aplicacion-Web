@@ -8,7 +8,7 @@ Este proyecto implementa la capa de persistencia utilizando Go, sqlc y PostgreSQ
 
 En la carpeta db se encuantra el archivo.sql que contiene las tablas y en users.sql contiene las consultas SQL.
 
-Dentro de la carpeta static hay un html y un css generados con IA para mostrar una innterfaz mas agradable cuando se levanta el servidor y no aparezca una pantalla en blanco. Estos archivos se sirven estaticamente.
+Dentro de la carpeta static hay un html y un css que generamos con IA. Esto lo hicimos para mostrar una interfaz mas agradable cuando se levanta el servidor y no aparezca una pantalla en blanco. Estos archivos se sirven estaticamente.
 
 En logic/ se encuentra la capa lógico con las validaciones del negocio
 
