@@ -6,13 +6,15 @@ Mate Máticos es una aplicación web tipo e-commerce orientada a la venta de pro
 
 Este proyecto implementa la capa de persistencia utilizando Go, sqlc y PostgreSQL usando Docker Compose.
 
-En la carpeta db se encuantra el archivo.sql que contiene las tablas y en users.sql contiene las consultas SQL.
+En la carpeta `db/schema/` se encuentra `schema.sql` que contiene la definición de las tablas, y en `db/queries/queries.sql` se encuentran las consultas SQL tipadas para sqlc.
 
-Dentro de la carpeta static hay un html y un css que generamos con IA. Esto lo hicimos para mostrar una interfaz mas agradable cuando se levanta el servidor y no aparezca una pantalla en blanco. Estos archivos se sirven estaticamente.
+En `models/` se definen los modelos y DTOs utilizados para deserializar las peticiones HTTP (desacoplados de las estructuras internas de la base de datos).
 
-En logic/ se encuentra la capa lógico con las validaciones del negocio
+En `logic/` se encuentra la capa de lógica de negocio, encargada de las validaciones de dominio y de orquestar las consultas a la base de datos.
 
-La capa de API Rest se encuentra en main.go, incluye todos los Endpoints HTTP
+La capa de API Rest se encuentra en `main.go`, incluye todos los endpoints HTTP, mapea las solicitudes a los DTOs y delega a la capa lógica utilizando el contexto de la petición (`r.Context()`).
+
+Dentro de la carpeta `static/` hay un HTML y un CSS para servir estáticamente una interfaz amigable con la documentación de los endpoints al levantar el servidor.
 
 Por otro lado, tenemos un archivo Makefile para automatización.
 

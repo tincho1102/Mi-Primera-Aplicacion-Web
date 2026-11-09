@@ -1,9 +1,9 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -12,13 +12,17 @@ import (
 	_ "github.com/lib/pq"
 	db "matematicos.com/servidor-go-tp1/db/sqlc"
 	"matematicos.com/servidor-go-tp1/logic"
+	"matematicos.com/servidor-go-tp1/models"
 )
 
-var queries *db.Queries
+var (
+	catLogic  *logic.CategoriaLogic
+	prodLogic *logic.ProductoLogic
+)
 
 func main() {
 	// conexion con la base de datos de Go
-	//consultamos con la IA y nos mostro que sql.open no verifica la conexion, 
+	// consultamos con la IA y nos mostro que sql.open no verifica la conexion, 
 	// por lo que debemos hacer un ping para verificar la conexion
 	connStr := "postgres://cliente:progwebunicen@localhost:5432/mate_db?sslmode=disable"	
 	sqlDB, err := sql.Open("postgres", connStr)
@@ -31,21 +35,22 @@ func main() {
 	}
 	defer sqlDB.Close()
 
-	// instancia sqlc
-	queries = db.New(sqlDB)
+	// instancia de sqlc e inyeccion a la capa de logica
+	queries := db.New(sqlDB)
+	catLogic = logic.NewCategoriaLogic(queries)
+	prodLogic = logic.NewProductoLogic(queries)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        // Si entran exactamente a "/", mostramos la landing bonita
-        if r.URL.Path == "/" {
-            http.ServeFile(w, r, "./static/index.html")
-            return
-        }
-        // Para cualquier otra cosa dentro de static/ (como css o js si tuvieras), lo servimos:
-        http.FileServer(http.Dir("./static")).ServeHTTP(w, r)
-    })
+		// Si entran exactamente a "/", mostramos la landing bonita
+		if r.URL.Path == "/" {
+			http.ServeFile(w, r, "./static/index.html")
+			return
+		}
+		// Para cualquier otra cosa dentro de static/ (como css o js si tuvieras), lo servimos:
+		http.FileServer(http.Dir("./static")).ServeHTTP(w, r)
+	})
 
-
-	//rutas http
+	// rutas http
 	http.HandleFunc("/categorias", categoriasHandler)
 	http.HandleFunc("/categorias/", categoriasHandler)
 
@@ -56,7 +61,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-// handler
+// Handlers para categorías
 
 func categoriasHandler(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
@@ -97,7 +102,7 @@ func categoriasHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getCategorias(w http.ResponseWriter, r *http.Request) {
-	categorias, err := queries.ListCategorias(context.Background())
+	categorias, err := catLogic.ListCategorias(r.Context())
 	if err != nil {
 		http.Error(w, "Error al listar categorias: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -108,24 +113,21 @@ func getCategorias(w http.ResponseWriter, r *http.Request) {
 }
 
 func createCategoria(w http.ResponseWriter, r *http.Request) {
-	var newCat db.Categoria
+	var req models.CategoriaRequest
 
-	err := json.NewDecoder(r.Body).Decode(&newCat)
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := logic.ValidateCategoria(newCat); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	createdCat, err := queries.CreateCategoria(context.Background(), db.CreateCategoriaParams{
-		NombreCat:      newCat.NombreCat,
-		DescripcionCat: newCat.DescripcionCat,
-	})
+	createdCat, err := catLogic.CreateCategoria(r.Context(), req)
 	if err != nil {
+		var valErr *logic.ValidationError
+		if errors.As(err, &valErr) {
+			http.Error(w, valErr.Error(), http.StatusBadRequest)
+			return
+		}
 		http.Error(w, "Error al crear categoria: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -136,9 +138,13 @@ func createCategoria(w http.ResponseWriter, r *http.Request) {
 }
 
 func getCategoria(w http.ResponseWriter, r *http.Request, id int) {
-	categoria, err := queries.GetCategoria(context.Background(), int32(id))
+	categoria, err := catLogic.GetCategoria(r.Context(), int32(id))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -147,49 +153,40 @@ func getCategoria(w http.ResponseWriter, r *http.Request, id int) {
 }
 
 func updateCategoria(w http.ResponseWriter, r *http.Request, id int) {
-	var updateCat db.Categoria
+	var req models.CategoriaRequest
 
-	err := json.NewDecoder(r.Body).Decode(&updateCat)
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := logic.ValidateCategoria(updateCat); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	cat, err := queries.GetCategoria(context.Background(), int32(id))
+	updatedCat, err := catLogic.UpdateCategoria(r.Context(), int32(id), req)
 	if err != nil {
-		http.Error(w, "Categoria no encontrada: "+err.Error(), http.StatusNotFound)
-		return
-	}
-
-	err = queries.UpdateCategoria(context.Background(), db.UpdateCategoriaParams{
-		IDCat:          cat.IDCat,
-		NombreCat:      updateCat.NombreCat,
-		DescripcionCat: updateCat.DescripcionCat,
-	})
-	if err != nil {
+		var valErr *logic.ValidationError
+		if errors.As(err, &valErr) {
+			http.Error(w, valErr.Error(), http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "Categoria no encontrada: "+err.Error(), http.StatusNotFound)
+			return
+		}
 		http.Error(w, "Error al actualizar categoria: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	updatedCat, _ := queries.GetCategoria(context.Background(), int32(id))
 	json.NewEncoder(w).Encode(updatedCat)
 }
 
 func deleteCategoria(w http.ResponseWriter, r *http.Request, id int) {
-	cat, err := queries.GetCategoria(context.Background(), int32(id))
+	err := catLogic.DeleteCategoria(r.Context(), int32(id))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
-
-	err = queries.DeleteCategoria(context.Background(), cat.IDCat)
-	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
 		http.Error(w, "Error al eliminar categoria: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -197,7 +194,7 @@ func deleteCategoria(w http.ResponseWriter, r *http.Request, id int) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// handler para productos
+// Handlers para productos
 
 func productosHandler(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
@@ -238,7 +235,7 @@ func productosHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getProductos(w http.ResponseWriter, r *http.Request) {
-	productos, err := queries.ListProductos(context.Background())
+	productos, err := prodLogic.ListProductos(r.Context())
 	if err != nil {
 		http.Error(w, "Error al listar productos: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -249,34 +246,21 @@ func getProductos(w http.ResponseWriter, r *http.Request) {
 }
 
 func createProducto(w http.ResponseWriter, r *http.Request) {
-	var newProd db.Producto
+	var req models.ProductoRequest
 
-	err := json.NewDecoder(r.Body).Decode(&newProd)
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := logic.ValidateProducto(newProd); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// Verificar si la categoria asociada existe
-	_, err = queries.GetCategoria(context.Background(), newProd.IDCat)
+	createdProd, err := prodLogic.CreateProducto(r.Context(), req)
 	if err != nil {
-		http.Error(w, "La categoria asociada no existe", http.StatusBadRequest)
-		return
-	}
-
-	createdProd, err := queries.CreateProducto(context.Background(), db.CreateProductoParams{
-		NombreProd:      newProd.NombreProd,
-		DescripcionProd: newProd.DescripcionProd,
-		Precio:          newProd.Precio,
-		Stock:           newProd.Stock,
-		IDCat:           newProd.IDCat,
-	})
-	if err != nil {
+		var valErr *logic.ValidationError
+		if errors.As(err, &valErr) {
+			http.Error(w, valErr.Error(), http.StatusBadRequest)
+			return
+		}
 		http.Error(w, "Error al crear producto: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -287,9 +271,13 @@ func createProducto(w http.ResponseWriter, r *http.Request) {
 }
 
 func getProducto(w http.ResponseWriter, r *http.Request, id int) {
-	producto, err := queries.GetProducto(context.Background(), int32(id))
+	producto, err := prodLogic.GetProducto(r.Context(), int32(id))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -298,51 +286,40 @@ func getProducto(w http.ResponseWriter, r *http.Request, id int) {
 }
 
 func updateProducto(w http.ResponseWriter, r *http.Request, id int) {
-	var updateProd db.Producto
+	var req models.ProductoRequest
 
-	err := json.NewDecoder(r.Body).Decode(&updateProd)
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := logic.ValidateProducto(updateProd); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	prod, err := queries.GetProducto(context.Background(), int32(id))
+	updatedProd, err := prodLogic.UpdateProducto(r.Context(), int32(id), req)
 	if err != nil {
-		http.Error(w, "Producto no encontrado: "+err.Error(), http.StatusNotFound)
-		return
-	}
-
-	err = queries.UpdateProducto(context.Background(), db.UpdateProductoParams{
-		IDProd:          prod.IDProd,
-		NombreProd:      updateProd.NombreProd,
-		DescripcionProd: updateProd.DescripcionProd,
-		Precio:          updateProd.Precio,
-		Stock:           updateProd.Stock,
-	})
-	if err != nil {
+		var valErr *logic.ValidationError
+		if errors.As(err, &valErr) {
+			http.Error(w, valErr.Error(), http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "Producto no encontrado: "+err.Error(), http.StatusNotFound)
+			return
+		}
 		http.Error(w, "Error al actualizar producto: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	updatedProd, _ := queries.GetProducto(context.Background(), int32(id))
 	json.NewEncoder(w).Encode(updatedProd)
 }
 
 func deleteProducto(w http.ResponseWriter, r *http.Request, id int) {
-	prod, err := queries.GetProducto(context.Background(), int32(id))
+	err := prodLogic.DeleteProducto(r.Context(), int32(id))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
-
-	err = queries.DeleteProducto(context.Background(), prod.IDProd)
-	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
 		http.Error(w, "Error al eliminar producto: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
