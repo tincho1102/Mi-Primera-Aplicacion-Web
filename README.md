@@ -1,4 +1,4 @@
-# TP 3. Exponiendo la Lógica como API. Mate Máticos
+# TP 5. Renderizado del Lado del Servidor. Mate Máticos
 
 ## Descripción
 
@@ -8,11 +8,9 @@ Este proyecto implementa la capa de persistencia utilizando Go, sqlc y PostgreSQ
 
 En la carpeta db se encuantra el archivo.sql que contiene las tablas y en users.sql contiene las consultas SQL.
 
-Dentro de la carpeta static hay un html y un css que generamos con IA. Esto lo hicimos para mostrar una interfaz mas agradable cuando se levanta el servidor y no aparezca una pantalla en blanco. Estos archivos se sirven estaticamente.
-
 En logic/ se encuentra la capa lógico con las validaciones del negocio
 
-La capa de API Rest se encuentra en main.go, incluye todos los Endpoints HTTP
+La capa web se encuentra en main.go. Desde el TP5 la aplicación usa renderizado del lado del servidor (SSR): las vistas están en views/ (componentes Templ) y la carga de datos se hace con formularios HTML.
 
 Por otro lado, tenemos un archivo Makefile para automatización.
 
@@ -52,7 +50,7 @@ El modelo de organización de Mate Máticos se puede ver en 2 tablas:
 
 * **Go** (v1.20 o superior)
 * **Docker** y **Docker Compose**
-* **sqlc**
+* **sqlc** y **templ** (los instala el Makefile)
 * **Make**
 * **Hurl**
 * **Agregar el usuario al grupo docker para evitar problemas de permisos**
@@ -63,32 +61,61 @@ sudo usermod -aG docker $USER
 
 ## Pasos para ejecutar el proyecto
 
-Instrucciones en la terminal desde la raíz del proyecto.
+Instrucciones para ejecutar el proyecto desde la terminal en la raíz del repositorio. El `Makefile` automatiza mediante los siguientes comandos:
 
-En el archivo Makefile se hicieron los comandos que se van a utilizar para agilizar la instalación y ejecucion de tests
+### 1. Preparación del entorno y dependencias
 
-### 1. Instalacion de módulo, dependencias, sqlc y Docker. Levanta la base y se asegura de que esté lista.
+Instala dependencias de Go, genera el código de `sqlc` y de las vistas con `templ`, levanta la base de datos PostgreSQL en Docker y aguarda con `pg_isready` a que esté lista para recibir conexiones.
+
 ```bash
-    make prepare
+make prepare
+
 ```
+
 ---
-### 2. Levanta el servidor en segundo plano. Puerto 8080
+
+### 2. Compilación y ejecución del servidor
+
+Compila las vistas `.templ`, genera el binario `server` y levanta la aplicación en segundo plano en el puerto `8080`, redirigiendo la salida a `server.log`.
+
 ```bash
-    make run
+make run
+
 ```
+
+> Abrir la aplicación en el navegador: [http://localhost:8080](http://localhost:8080)
+
 ---
-### 3. Ejecución de pruebas automatizadas de los Endpoints con hurl
+
+### 3. Limpieza del entorno
+
+Detiene el servidor en segundo plano matando su PID, borra los archivos temporales de ejecución (`server`, `server.pid`, `server.log`) y elimina los contenedores y volúmenes de datos de Docker.
+
 ```bash
-    make test
+make clean
+
 ```
+
 ---
-### 3. Limpieza de contenedores y volúmenes, borra lo que tiene las tablas. Y mata el proceso del servidor en segundo plano
+
+### Otros comandos
+
+* **Ejecución completa del ciclo de vida** (`prepare` $\rightarrow$ `run` $\rightarrow$ `test` $\rightarrow$ `clean`):
 ```bash
-    make clean
+make all
+
 ```
----
-### Adicional. Ejecuta todo en orden. Hace prepare run test clean
+
+
+* **Ejecución de desarrollo sin limpieza** (`prepare` $\rightarrow$ `run`, útil para mantener el servidor corriendo y revisar `server.log`):
 ```bash
-    make all
+make execute
+
 ```
----
+
+
+* **Generación manual de vistas** (recompila únicamente las plantillas de `views/` a código Go):
+```bash
+make generate
+
+```

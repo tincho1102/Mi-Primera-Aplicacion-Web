@@ -1,0 +1,90 @@
+package views
+
+import (
+	"strconv"
+
+	db "matematicos.com/servidor-go-tp1/db/sqlc"
+)
+
+// nombreCategoria busca el nombre de una categoría por su id dentro del listado
+// que ya trajimos de la base, así evitamos una consulta extra por cada fila.
+func nombreCategoria(categorias []db.Categoria, id int32) string {
+	for _, c := range categorias {
+		if c.IDCat == id {
+			return c.NombreCat
+		}
+	}
+	return "-"
+}
+
+// CategoriasTable muestra todas las categorías en una tabla.
+// Si la categoría tiene padre (id_padre no nulo) se muestra su nombre.
+templ CategoriasTable(categorias []db.Categoria) {
+	if len(categorias) == 0 {
+		<p>Todavía no hay categorías cargadas.</p>
+	} else {
+		<div class="overflow-auto">
+			<table class="striped">
+				<thead>
+					<tr>
+						<th scope="col">ID</th>
+						<th scope="col">Nombre</th>
+						<th scope="col">Descripción</th>
+						<th scope="col">Categoría padre</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, c := range categorias {
+						<tr>
+							<td>{ strconv.Itoa(int(c.IDCat)) }</td>
+							<td>{ c.NombreCat }</td>
+							<td>{ c.DescripcionCat }</td>
+							<td>
+								if c.IDPadre.Valid {
+									{ nombreCategoria(categorias, c.IDPadre.Int32) }
+								} else {
+									-
+								}
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	}
+}
+
+// ProductosTable muestra todos los productos en una tabla.
+// Recibe también las categorías para mostrar el nombre en lugar del id.
+templ ProductosTable(productos []db.Producto, categorias []db.Categoria) {
+	if len(productos) == 0 {
+		<p>Todavía no hay productos cargados.</p>
+	} else {
+		<div class="overflow-auto">
+			<table class="striped">
+				<thead>
+					<tr>
+						<th scope="col">ID</th>
+						<th scope="col">Nombre</th>
+						<th scope="col">Descripción</th>
+						<th scope="col">Precio</th>
+						<th scope="col">Stock</th>
+						<th scope="col">Categoría</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, p := range productos {
+						<tr>
+							<td>{ strconv.Itoa(int(p.IDProd)) }</td>
+							<td>{ p.NombreProd }</td>
+							<td>{ p.DescripcionProd }</td>
+							<td>$ { p.Precio }</td>
+							<td>{ strconv.Itoa(int(p.Stock)) }</td>
+							<td>{ nombreCategoria(categorias, p.IDCat) }</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	}
+}
