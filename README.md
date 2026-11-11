@@ -60,6 +60,8 @@ sudo usermod -aG docker $USER
 ---
 
 ## Pasos para ejecutar el proyecto
+Para clonar el proyecto se usa git clone -b tp5 https://github.com/tincho1102/Mi-Primera-Aplicacion-Web.git
+Esto se hace para descargar la rama correcta que en este caso es la del tp5
 
 Instrucciones para ejecutar el proyecto desde la terminal en la raíz del repositorio. El `Makefile` automatiza mediante los siguientes comandos:
 
