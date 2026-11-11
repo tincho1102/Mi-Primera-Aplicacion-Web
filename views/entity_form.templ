@@ -1,0 +1,93 @@
+package views
+
+import (
+	"net/url"
+	"strconv"
+
+	db "matematicos.com/servidor-go-tp1/db/sqlc"
+)
+
+// FormState guarda el estado de un formulario cuando falla la validación:
+// el mensaje de error y los valores que el usuario había escrito, para
+// volver a mostrarlos y que no tenga que tipear todo de nuevo.
+// En una carga normal de la página se usa el valor vacío FormState{}.
+type FormState struct {
+	Error  string
+	Values url.Values
+}
+
+// idStr convierte el id de una categoría al string que usan los <option>.
+func idStr(id int32) string {
+	return strconv.Itoa(int(id))
+}
+
+// CategoriaForm es el formulario de alta de categorías.
+// Hace POST a /categorias. El <select> de categoría padre es opcional:
+// la opción vacía significa "sin padre" (id_padre = NULL).
+templ CategoriaForm(categorias []db.Categoria, state FormState) {
+	<form method="POST" action="/categorias">
+		if state.Error != "" {
+			<p class="error" role="alert">{ state.Error }</p>
+		}
+		<label>
+			Nombre
+			<input type="text" name="nombre_cat" maxlength="20" required value={ state.Values.Get("nombre_cat") }/>
+		</label>
+		<label>
+			Descripción
+			<input type="text" name="descripcion_cat" maxlength="255" required value={ state.Values.Get("descripcion_cat") }/>
+		</label>
+		<label>
+			Categoría padre (opcional)
+			<select name="id_padre">
+				<option value="">Ninguna</option>
+				for _, c := range categorias {
+					<option value={ idStr(c.IDCat) } selected?={ state.Values.Get("id_padre") == idStr(c.IDCat) }>{ c.NombreCat }</option>
+				}
+			</select>
+		</label>
+		<button type="submit">Crear categoría</button>
+	</form>
+}
+
+// ProductoForm es el formulario de alta de productos.
+// Hace POST a /productos. La categoría se elige de un <select> con las
+// categorías existentes; si todavía no hay ninguna se avisa al usuario.
+templ ProductoForm(categorias []db.Categoria, state FormState) {
+	<form method="POST" action="/productos">
+		if state.Error != "" {
+			<p class="error" role="alert">{ state.Error }</p>
+		}
+		<label>
+			Nombre
+			<input type="text" name="nombre_prod" maxlength="30" required value={ state.Values.Get("nombre_prod") }/>
+		</label>
+		<label>
+			Descripción
+			<input type="text" name="descripcion_prod" maxlength="255" required value={ state.Values.Get("descripcion_prod") }/>
+		</label>
+		<div class="grid">
+			<label>
+				Precio
+				<input type="number" name="precio" min="0.01" step="0.01" required value={ state.Values.Get("precio") }/>
+			</label>
+			<label>
+				Stock
+				<input type="number" name="stock" min="0" step="1" required value={ state.Values.Get("stock") }/>
+			</label>
+		</div>
+		<label>
+			Categoría
+			<select name="id_cat" required>
+				<option value="">Elegí una categoría</option>
+				for _, c := range categorias {
+					<option value={ idStr(c.IDCat) } selected?={ state.Values.Get("id_cat") == idStr(c.IDCat) }>{ c.NombreCat }</option>
+				}
+			</select>
+		</label>
+		if len(categorias) == 0 {
+			<small>Primero tenés que crear al menos una categoría.</small>
+		}
+		<button type="submit">Crear producto</button>
+	</form>
+}

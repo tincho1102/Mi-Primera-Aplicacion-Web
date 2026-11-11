@@ -1,0 +1,30 @@
+package views
+
+import db "matematicos.com/servidor-go-tp1/db/sqlc"
+
+// Index es la página principal: integra el Layout con los dos formularios
+// de alta y los listados de categorías y productos.
+// catForm y prodForm llevan el error de validación (si lo hubo) de cada
+// formulario; en una carga normal (GET /) llegan vacíos.
+templ Index(categorias []db.Categoria, productos []db.Producto, catForm FormState, prodForm FormState) {
+	@Layout("Mate Máticos") {
+		<section class="grid">
+			<article>
+				<header><h2>Nueva categoría</h2></header>
+				@CategoriaForm(categorias, catForm)
+			</article>
+			<article>
+				<header><h2>Nuevo producto</h2></header>
+				@ProductoForm(categorias, prodForm)
+			</article>
+		</section>
+		<section>
+			<h2>Categorías</h2>
+			@CategoriasTable(categorias)
+		</section>
+		<section>
+			<h2>Productos</h2>
+			@ProductosTable(productos, categorias)
+		</section>
+	}
+}

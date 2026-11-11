@@ -1,0 +1,11 @@
+version: "2"
+sql:
+- engine: "postgresql"
+  queries: "/db/queries/"
+  schema: "/db/schema/"
+  gen:
+    go:
+      package: "db"
+      out: "./db/sqlc/"
+      emit_exact_table_names: true #para que no cambie el nombre de las tablas, por ejemplo de categoria a categorium
+      emit_json_tags: true
