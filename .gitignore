@@ -1,0 +1,23 @@
+# se lo pedimos a la IA para poder subirlo a github y que no se suban los archivos que se deben generar con los comandos dados.
+
+# Módulo e instalación de Go (se inicializa con go mod init desde el Makefile)
+go.mod
+go.sum
+
+# Binarios y ejecutables compilados de Go
+*.exe
+*.exe;
+*.dll
+*.so
+*.dylib
+main
+server
+server.pid
+server.log
+
+# Variables de entorno o archivos temporales
+.env
+*.tmp
+
+# Código generado por sqlc (lo genera el Makefile)
+db/sqlc/

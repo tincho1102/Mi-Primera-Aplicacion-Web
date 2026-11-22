@@ -1,0 +1,55 @@
+- Las entregas no deben contener archivos javascript (.js). Si los hubiere seran borrados antes de correr la aplicación.
+- Se debe proveer script bash, makefile o similar que realice todas las tareas necesarias para ejecutar la aplicación. Esto incluye todas las:
+
+**1) Tareas previas: ejecucion sqlc, compilacion, borrar contenedores y volumenes, levantar contenedores, esperar que la base este corriendo**
+
+**2) Ejecutar la aplicación**
+
+**3) Tareas posteriores: borrar contenedores y volumenes**
+
+**Y cualquier otra tarea que se necesita para correr su proyecto.**
+
+Correciones
+
+Les dejo algunas comentarios:
+
+- Usan templ versionado a v0.3.1020 pero luego para hacer el generate usando la ruta de instalacion del sistema donde yo tengo una version mas nueva y rompia la compilacion. Por lo tanto el comando generate tambien haganlo versionado o pongan la dependencia directamente dentro del contenedor para que no dependa del sistema operativo host.
+- Los handlers que renderizan los formularios les conviene tenerlos en archivos separados por entidad para que este un poco mas prolijo y no todo metido en el main.
+- Para la proxima entrega en el inicio de la app inserten algunos productos y categorias de entrada para que la interaccion sea mas rapida.
+
+## Enunciado
+
+Trabajo de Cursada: Interfaces Reactivas con HTMX
+Objetivo: Evolucionar la aplicación renderizada en el servidor para que se sienta como una aplicación de página única (SPA), utilizando HTMX para eliminar las recargas completas.
+Tomarás la aplicación templ del TP5 y la harás dinámica.
+
+1. Integración de HTMX:
+En tu componente layout.templ, añade el script de HTMX en el <head>.
+2. Creación sin Recarga de Página:
+Modifica el componente del formulario (entity_form.templ):
+• Añade los atributos hx-post, hx-target y hx-swap al tag <form>.
+• hx-post debe apuntar a la misma ruta que antes (/<entidades>).
+• hx-target debe apuntar al id del contenedor de tu lista de entidades.
+• hx-swap puede ser outerHTML o beforeend si quieres añadir al final de la lista.
+Modifica el handler POST /<entidades>:
+• Elimina la redirección.
+• Después de crear la nueva entidad en la base de datos, vuelve a consultar la lista completa de entidades
+• Renderiza y devuelve únicamente el componente de la lista (entity_list.templ) con los datos actualizados. HTMX recibirá este fragmento de HTML y lo colocará en el target especificado.
+3. Borrado sin Recarga de Página:
+En tu componente de lista (entity_list.templ), añade un botón de “Borrar” a cada elemento.
+
+Configura este botón con atributos HTMX:
+    - hx-delete: Apuntando a una nueva ruta como /<entidades>/{id}.
+    - hx-target="closest tr" (o el elemento que contenga a tu entidad) para indicarle a HTMX qué debe eliminar del DOM.
+    - hx-swap="outerHTML" para que el elemento sea reemplazado por la respuesta (vacía) del servidor.
+    - (Opcional) hx-confirm para pedir confirmación al usuario.
+    
+    Crea un nuevo handler para DELETE /<entidades>/{id}:
+    • Debe obtener el ID de la URL.
+    • Llamar al método Delete... de sqlc.
+    • Devolver una respuesta vacía con código 200 OK. HTMX interpretará esto como “reemplazar el target con nada”, eliminando efectivamente el elemento de la vista.
+    
+4. Verificación Final:
+
+Ejecuta la aplicación. Ahora deberías poder crear y eliminar entidades y ver cómo la lista se actualiza instantá-
+neamente sin que la página se recargue por completo. ¡Has construido una aplicación web moderna y reactiva sin escribir una sola línea de JavaScript!

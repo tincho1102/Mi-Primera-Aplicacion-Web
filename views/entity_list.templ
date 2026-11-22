@@ -1,0 +1,140 @@
+package views
+
+import (
+	"fmt"
+	"strconv"
+
+	db "matematicos.com/servidor-go-tp1/db/sqlc"
+)
+
+// nombreCategoria busca el nombre de una categoría por su id dentro del listado
+// que ya trajimos de la base, así evitamos una consulta extra por cada fila.
+func nombreCategoria(categorias []db.Categoria, id int32) string {
+	for _, c := range categorias {
+		if c.IDCat == id {
+			return c.NombreCat
+		}
+	}
+	return "-"
+}
+
+// CategoriasTable muestra todas las categorías en una tabla.
+// El contenedor raíz tiene id="categorias-table-container": el formulario lo
+// usa como hx-target con hx-swap="outerHTML", y como el fragmento nuevo trae
+// el mismo id, el target sigue existiendo para las próximas altas
+// (patrón de las filminas 57-58).
+templ CategoriasTable(categorias []db.Categoria) {
+	<div id="categorias-table-container" class="overflow-auto">
+		<table class="striped">
+			<thead>
+				<tr>
+					<th scope="col">ID</th>
+					<th scope="col">Nombre</th>
+					<th scope="col">Descripción</th>
+					<th scope="col">Categoría padre</th>
+					<th scope="col">Acciones</th>
+				</tr>
+			</thead>
+			<tbody>
+				for _, c := range categorias {
+					@CategoriaRow(c, categorias, "")
+				}
+				if len(categorias) == 0 {
+					<tr><td colspan="5">Todavía no hay categorías cargadas.</td></tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+// CategoriaRow es una fila de la tabla de categorías.
+// El botón Borrar hace DELETE /categorias/{id} y reemplaza su propia fila
+// (hx-target="closest tr") con la respuesta.
+// swapEmpty:true: al borrar una categoría el servidor responde solo con
+// fragmentos OOB (tabla de productos y selects, porque los productos se borran
+// en cascada). HTMX 4 por defecto omite el swap principal si la respuesta
+// trae OOB y nada más; con swapEmpty:true lo hace igual y la fila se elimina.
+// errMsg se usa cuando el borrado falla (ej. tiene subcategorías): el servidor
+// devuelve la misma fila con el mensaje, en lugar de una respuesta vacía.
+templ CategoriaRow(c db.Categoria, categorias []db.Categoria, errMsg string) {
+	<tr>
+		<td>{ strconv.Itoa(int(c.IDCat)) }</td>
+		<td>{ c.NombreCat }</td>
+		<td>{ c.DescripcionCat }</td>
+		<td>
+			if c.IDPadre.Valid {
+				{ nombreCategoria(categorias, c.IDPadre.Int32) }
+			} else {
+				-
+			}
+		</td>
+		<td>
+			<button
+				type="button"
+				class="outline secondary"
+				hx-delete={ fmt.Sprintf("/categorias/%d", c.IDCat) }
+				hx-target="closest tr"
+				hx-swap="outerHTML swapEmpty:true"
+				hx-confirm={ fmt.Sprintf("¿Estás seguro de que deseas eliminar la categoría \"%s\"? También se eliminarán sus productos.", c.NombreCat) }
+			>
+				Borrar
+			</button>
+			if errMsg != "" {
+				<small class="error" role="alert">{ errMsg }</small>
+			}
+		</td>
+	</tr>
+}
+
+// ProductosTable muestra todos los productos en una tabla.
+// Recibe también las categorías para mostrar el nombre en lugar del id.
+templ ProductosTable(productos []db.Producto, categorias []db.Categoria) {
+	@productosTable(productos, categorias, false)
+}
+
+// productosTable permite mandar la tabla como fragmento OOB, que se usa al
+// borrar una categoría (sus productos se borran en cascada en la base).
+templ productosTable(productos []db.Producto, categorias []db.Categoria, oob bool) {
+	<div id="productos-table-container" class="overflow-auto" { oobAttrs(oob)... }>
+		<table class="striped">
+			<thead>
+				<tr>
+					<th scope="col">ID</th>
+					<th scope="col">Nombre</th>
+					<th scope="col">Descripción</th>
+					<th scope="col">Precio</th>
+					<th scope="col">Stock</th>
+					<th scope="col">Categoría</th>
+					<th scope="col">Acciones</th>
+				</tr>
+			</thead>
+			<tbody>
+				for _, p := range productos {
+					<tr>
+						<td>{ strconv.Itoa(int(p.IDProd)) }</td>
+						<td>{ p.NombreProd }</td>
+						<td>{ p.DescripcionProd }</td>
+						<td>$ { p.Precio }</td>
+						<td>{ strconv.Itoa(int(p.Stock)) }</td>
+						<td>{ nombreCategoria(categorias, p.IDCat) }</td>
+						<td>
+							<button
+								type="button"
+								class="outline secondary"
+								hx-delete={ fmt.Sprintf("/productos/%d", p.IDProd) }
+								hx-target="closest tr"
+								hx-swap="outerHTML"
+								hx-confirm={ fmt.Sprintf("¿Estás seguro de que deseas eliminar el producto \"%s\"?", p.NombreProd) }
+							>
+								Borrar
+							</button>
+						</td>
+					</tr>
+				}
+				if len(productos) == 0 {
+					<tr><td colspan="7">Todavía no hay productos cargados.</td></tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}

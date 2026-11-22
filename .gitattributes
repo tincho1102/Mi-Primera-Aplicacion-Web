@@ -1,0 +1,3 @@
+# El Makefile se ejecuta en Linux: forzamos fin de línea LF aunque el
+# repositorio se edite desde Windows (con CRLF make falla).
+Makefile text eol=lf
