@@ -1,4 +1,4 @@
-.PHONY: all prepare deps sqlc generate build run clean
+.PHONY: all prepare generate run clean
 
 MODULE_NAME = matematicos.com/servidor-go-tp1
 
@@ -12,21 +12,12 @@ SQLC_VERSION  = v1.30.0
 TEMPL = go run github.com/a-h/templ/cmd/templ@$(TEMPL_VERSION)
 SQLC  = go run github.com/sqlc-dev/sqlc/cmd/sqlc@$(SQLC_VERSION)
 
-# Ciclo completo en un solo comando:
-#   1) Tareas previas (prepare + build)
-#   2) Ejecución del servidor en primer plano
-#   3) Tareas posteriores (clean) al terminar o al cortar con Ctrl+C
-#	El trap hace que el shell no se corte con Ctrl+C (o una señal TERM): espera a
-#	que el servidor termine y sigue con el clean, que borra contenedores y volúmenes.
-all: prepare build
-	@echo ">>> Servidor en http://localhost:8080 (Ctrl+C para salir y limpiar)"
-	@trap 'echo' INT TERM; ./server; $(MAKE) --no-print-directory clean
+# Ciclo completo: prepara el entorno y levanta el servidor en segundo plano
+all: prepare run
 
-# Tareas previas: módulo y código generado, borrar contenedores y volúmenes
-# viejos, levantar PostgreSQL y esperar con pg_isready a que acepte conexiones.
-#	-h localhost hace que pg_isready pruebe por TCP, que recién responde cuando
-#	terminó de ejecutarse el schema.sql de inicialización.
-prepare: deps
+# Tareas previas: módulo y código generado (generate), borrar contenedores y volúmenes
+# viejos, levantar PostgreSQL, esperar con pg_isready a que acepte conexiones y compilar.
+prepare: generate
 	docker compose down -v
 	docker compose up -d
 	@echo "Esperando a que la base de datos esté lista..."
@@ -36,37 +27,35 @@ prepare: deps
 		sleep 1; \
 	done
 	@echo "Base de datos lista y conectada"
+	go build -o server .
 
-# Módulo de Go y código generado. go.mod y go.sum no se suben al repositorio,
-# por eso se crean acá si no existen.
-#	El orden importa: primero se genera el codigo de sqlc (db/sqlc) y de templ
-#	(views/*_templ.go), y recien despues go mod tidy, que necesita ver esos
-#	imports para no borrar dependencias.
-deps:
+# Módulo de Go y código generado por sqlc y templ.
+# go.mod y go.sum no se suben al repositorio, por eso se crean acá si no existen.
+generate:
 	@test -f go.mod || go mod init $(MODULE_NAME)
 	$(SQLC) generate
 	$(TEMPL) generate
 	go get github.com/a-h/templ@$(TEMPL_VERSION)
 	go mod tidy
 
-# Genera solo el código Go de las queries (db/sqlc)
-sqlc:
-	$(SQLC) generate
+# Levanta el servidor en segundo plano para no bloquear la consola
+run:
+	@test -f server || go build -o server .
+	@if [ -f server.pid ] && kill -0 $$(cat server.pid) 2>/dev/null; then \
+		echo "El servidor ya se encuentra corriendo en segundo plano (PID: $$(cat server.pid))"; \
+	else \
+		./server > server.log 2>&1 & echo $$! > server.pid; \
+		echo ">>> Servidor iniciado en segundo plano en http://localhost:8080 (PID: $$(cat server.pid))"; \
+		echo ">>> Logs en server.log (tail -f server.log). Para detener y limpiar: make clean"; \
+	fi
 
-# Compila solo los componentes .templ de views/ a archivos _templ.go
-generate:
-	$(TEMPL) generate
-
-# Compila el binario (regenerando antes el código)
-build: deps
-	go build -o server .
-
-# Compila y ejecuta el servidor sin limpiar al final, para desarrollo.
-# Requiere la base levantada con "make prepare"; al terminar, "make clean".
-run: build
-	./server
-
-# Tareas posteriores: detiene contenedores, borra volúmenes y el binario
+# Tareas posteriores: detiene el servidor, contenedores, volúmenes y archivos generados
 clean:
+	@if [ -f server.pid ]; then \
+		echo "Deteniendo servidor (PID: $$(cat server.pid))..."; \
+		kill $$(cat server.pid) 2>/dev/null || true; \
+		rm -f server.pid; \
+	fi
+	@pkill -f "./server" 2>/dev/null || true
 	docker compose down -v
-	rm -f server
+	rm -f server server.log

@@ -1,4 +1,4 @@
-// Package seed carga datos iniciales en la base para que, al abrir la
+// seed carga datos iniciales en la base para que, lo hicimos para que al abrir la
 // aplicación, ya haya categorías y productos con los que interactuar.
 package seed
 
@@ -14,7 +14,7 @@ import (
 type categoriaSeed struct {
 	nombre      string
 	descripcion string
-	padre       string // nombre de la categoría padre, "" si no tiene
+	padre       string
 }
 
 type productoSeed struct {
@@ -52,7 +52,7 @@ var productos = []productoSeed{
 // Run carga las categorías y productos por defecto, solo si la tabla de
 // categorías está vacía (sin categorías tampoco puede haber productos, porque
 // producto.id_cat es NOT NULL). Así no se duplican datos si la base ya tenía
-// información. Todo se hace en una transacción: o se carga todo o nada.
+// información. Todo se hace en una transacción o sea, se carga todo o nada.
 func Run(ctx context.Context, sqlDB *sql.DB) error {
 	tx, err := sqlDB.BeginTx(ctx, nil)
 	if err != nil {

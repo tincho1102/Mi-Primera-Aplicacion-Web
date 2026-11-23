@@ -53,7 +53,7 @@ El modelo de organización de Mate Máticos se puede ver en 2 tablas:
 
 ## Interacción con HTMX
 
-HTMX 4.0.0 se carga desde la CDN en el `<head>` del layout. El proyecto **no contiene archivos `.js`**.
+HTMX se carga desde la CDN en el `<head>` del layout. El proyecto **no contiene archivos `.js`**.
 
 | Acción | Petición | Respuesta del servidor |
 |--------|----------|------------------------|
@@ -64,9 +64,12 @@ HTMX 4.0.0 se carga desde la CDN en el `<head>` del layout. El proyecto **no con
 
 Después de un alta exitosa el formulario se limpia con `hx-on:htmx:after:swap`.
 
-**Manejo de errores:** en HTMX 4 las respuestas 4xx/5xx también se intercambian en el DOM, por eso:
-- Si falla la validación de un alta, el servidor responde `400` con los headers `HX-Retarget` y `HX-Reswap`, y el mensaje aparece arriba del formulario sin borrar lo que el usuario escribió.
-- Si se intenta borrar una categoría que tiene subcategorías, el servidor responde `409 Conflict` con la misma fila y el motivo del error, así la fila no desaparece.
+Usamos HTMX porque permite que una aplicacion web se sienta mas fluida, sin js.
+
+Las ventajas de usar HTMX son: 
+ * Evita recargar la pagina completa
+ * Mejora el HTML estandar
+ * Mantiene la logica en el servidor
 
 ---
 
@@ -78,7 +81,7 @@ Al arrancar, si la tabla de categorías está vacía, la aplicación carga algun
 
 ## Requisitos previos
 
-* **Go** 1.25 o superior (lo requiere templ v0.3.1020)
+* **Go** 1.22 o superior
 * **Docker** y **Docker Compose**
 * **Make**
 * **Agregar el usuario al grupo docker para evitar problemas de permisos**
@@ -99,24 +102,29 @@ Luego hay que entrar a la carpeta usando:
 
 ### Ejecución completa (recomendada)
 
-Un solo comando realiza todo el ciclo de vida:
+Un solo comando realiza la preparación y levanta el servidor en segundo plano:
 
 ```bash
 make        # equivale a make all
 ```
 
 1. **Tareas previas:** crea el módulo de Go si no existe, genera el código de sqlc y las vistas de templ (versionados), borra contenedores y volúmenes anteriores (`docker compose down -v`), levanta PostgreSQL (`docker compose up -d`), espera con `pg_isready` a que acepte conexiones y compila el binario `server`.
-2. **Ejecución:** corre el servidor en primer plano.
-3. **Tareas posteriores:** al cortar con `Ctrl+C` (o si el servidor termina) borra los contenedores, los volúmenes y el binario (`make clean`).
+2. **Ejecución:** inicia el servidor en segundo plano (`server.pid`) y redirige su salida a `server.log`, dejando la terminal libre para seguir introduciendo comandos.
+3. **Tareas posteriores:** cuando desees detener la aplicación y limpiar el entorno, ejecutás:
+```bash
+make clean
+```
+Esto detiene el proceso del servidor, elimina contenedores y volúmenes de Docker, y borra los archivos temporales.
 
-> Abrir la aplicación en el navegador: [http://localhost:8080](http://localhost:8080)
+> Abrir la aplicación en el navegador: [http://localhost:8080](http://localhost:8080)  
+> Para ver los logs del servidor en tiempo real: `tail -f server.log`
 
-### Targets individuales del Makefile
+### Comandos del Makefile
 
 | Comando | Qué hace |
 |---------|----------|
-| `make prepare` | Tareas previas: módulo, sqlc, templ, borrar y levantar contenedores, esperar a la base |
-| `make run` | Compila y ejecuta el servidor sin limpiar al final (requiere `make prepare` antes) |
-| `make clean` | Tareas posteriores: detiene contenedores, borra volúmenes y el binario |
-| `make generate` | Regenera solo las vistas con `templ@v0.3.1020` |
-| `make sqlc` | Regenera solo el código de sqlc |
+| `make` o `make all` | **Ciclo completo:** ejecuta tareas previas y levanta el servidor en segundo plano, liberando la consola |
+| `make prepare` | **Tareas previas:** genera código (`sqlc` y `templ`), levanta PostgreSQL con Docker, espera conexión y compila el servidor |
+| `make run` | **Ejecución:** levanta el servidor en segundo plano (requiere la base levantada con `make prepare`) |
+| `make generate` | **Generación de código:** crea el módulo si no existe y regenera el código de `sqlc` y las vistas de `templ` |
+| `make clean` | **Tareas posteriores:** detiene el proceso del servidor en segundo plano, borra volúmenes/contenedores de Docker y los archivos temporales (`server`, `server.pid`, `server.log`) |
